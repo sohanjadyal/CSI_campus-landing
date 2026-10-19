@@ -179,9 +179,13 @@ if (list) {
   }
 
   function escapeHtml(s) {
-    const d = document.createElement("div");
-    d.textContent = s;
-    return d.innerHTML;
+    if (s === null || s === undefined) return "";
+    return String(s)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
   }
 
   function toggleClearButton() {
@@ -228,7 +232,9 @@ if (list) {
     if (currentTab === "saved") {
       render();
     } else {
-      const card = list.querySelector(`.event-card[data-id="${id}"]`);
+      const card = Array.from(list.querySelectorAll(".event-card")).find(
+        (c) => c.getAttribute("data-id") === id
+      );
       if (card) {
         const btn = card.querySelector(".bookmark-btn");
         const newlySaved = !isSaved;
@@ -411,8 +417,23 @@ if (list) {
         </div>
       `;
 
-      card.querySelector(".bookmark-btn").addEventListener("click", () => toggleBookmark(e));
-      card.querySelector(".add-calendar").addEventListener("click", () => downloadCalendarEvent(e));
+      const bookmarkBtn = card.querySelector(".bookmark-btn");
+      if (bookmarkBtn) {
+        bookmarkBtn.setAttribute("aria-label", isSaved ? `Remove ${e.title} from saved events` : `Save ${e.title} to schedule`);
+        bookmarkBtn.addEventListener("click", () => toggleBookmark(e));
+      }
+
+      const gcalBtn = card.querySelector(".gcal-btn");
+      if (gcalBtn) {
+        gcalBtn.setAttribute("aria-label", `Add ${e.title} to Google Calendar`);
+      }
+
+      const icsBtn = card.querySelector(".add-calendar");
+      if (icsBtn) {
+        icsBtn.setAttribute("aria-label", `Download .ics file for ${e.title}`);
+        icsBtn.addEventListener("click", () => downloadCalendarEvent(e));
+      }
+
       list.appendChild(card);
     });
   }
